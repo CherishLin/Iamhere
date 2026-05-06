@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我在 - 智能语音助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 页面1: 首页 -->
+        <div id="page-home" class="page active">
+            <!-- 顶部标题区 -->
+            <header class="home-header">
+                <div class="brand">
+                    <h1 class="app-name">我在</h1>
+                    <p class="tagline">随时随地，我一直都在。</p>
+                </div>
+            </header>
+
+            <!-- 中央核心交互区 -->
+            <main class="main-content">
+                <div class="record-area">
+                    <button id="record-btn" class="record-circle">
+                        <div class="circle-inner">
+                            <span class="mic-icon">🎤</span>
+                            <span class="btn-text">按住说话</span>
+                        </div>
+                        <div class="ripple"></div>
+                    </button>
+                    <p class="record-tip">用中文说出您的需求，我帮您翻译</p>
+                    <div class="example-phrases">
+                        <p class="example-title">可以说：</p>
+                        <p class="example-list">"您好，请问洗手间在哪里"</p>
+                        <p class="example-list">"您好，怎么办理托运"</p>
+                        <p class="example-list">"请问这个多少钱"</p>
+                        <p class="example-list">"我想叫一辆出租车"</p>
+                        <p class="example-list">"我不舒服，需要看医生"</p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 底部固定功能栏 -->
+            <footer class="bottom-bar">
+                <button class="bottom-btn emergency" id="emergency-btn">
+                    <span class="btn-icon">🆘</span>
+                    <span class="btn-label">紧急求助</span>
+                </button>
+                <button class="bottom-btn language" id="language-btn">
+                    <span class="btn-icon">🌍</span>
+                    <span class="btn-label" id="current-lang">当前语言：英语</span>
+                </button>
+                <button class="bottom-btn auto-play active" id="auto-play-btn">
+                    <span class="btn-icon">🔊</span>
+                    <span class="btn-label" id="auto-play-status">自动语音已开启</span>
+                </button>
+            </footer>
+        </div>
+
+        <!-- 页面2: 录音中 -->
+        <div id="page-listening" class="page">
+            <div class="listening-container">
+                <div class="listening-animation">
+                    <div class="wave-ring"></div>
+                    <div class="wave-ring"></div>
+                    <div class="listening-icon">🎧</div>
+                </div>
+                <p class="listening-text">正在听你说话…</p>
+                <div class="transcript-box">
+                    <p id="transcript-text"></p>
+                </div>
+                <p class="listening-hint">松开手指即可完成</p>
+            </div>
+        </div>
+
+        <!-- 页面3: 处理中 -->
+        <div id="page-processing" class="page">
+            <div class="processing-container">
+                <div class="processing-spinner">
+                    <div class="spinner-circle"></div>
+                    <div class="spinner-center">✨</div>
+                </div>
+                <p class="processing-text">正在为您翻译…</p>
+                <div class="processing-detail">
+                    <span id="process-step">语义整理中</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页面4: 结果页 -->
+        <div id="page-result" class="page">
+            <div class="result-container">
+                <!-- 语言标识 -->
+                <div class="lang-badge">
+                    <span id="result-flag">🇺🇸</span>
+                    <span id="result-lang">英语</span>
+                </div>
+
+                <!-- 翻译结果（超大字体） -->
+                <div class="translation-display">
+                    <p id="translation-result"></p>
+                </div>
+
+                <!-- 语音播放提示 -->
+                <div class="playing-indicator" id="playing-indicator">
+                    <span class="sound-wave">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </span>
+                    <span>正在播放</span>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="result-actions">
+                    <button class="action-btn secondary" id="show-original-btn">
+                        <span>🧾</span>
+                        <span>查看中文原话</span>
+                    </button>
+                    <button class="action-btn primary" id="speak-again-btn">
+                        <span>🔁</span>
+                        <span>再说一遍</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中文原话弹窗 -->
+        <div id="original-modal" class="modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🧾 中文原话</h3>
+                    <button class="close-btn" id="close-modal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="original-section">
+                        <p class="section-title">您说的是：</p>
+                        <p id="original-text" class="text-content"></p>
+                    </div>
+                    <div class="optimized-section">
+                        <p class="section-title">优化为：</p>
+                        <p id="optimized-text" class="text-content"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 语言选择弹窗 -->
+        <div id="lang-modal" class="modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🌍 选择目标语言</h3>
+                    <button class="close-btn" id="close-lang-modal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="lang-list" id="lang-list">
+                        <!-- 语言列表由JS生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 紧急求助弹窗 -->
+        <div id="emergency-modal" class="modal emergency-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header emergency-header">
+                    <h3>🆘 紧急求助</h3>
+                    <button class="close-btn" id="close-emergency-modal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p class="emergency-desc">选择您需要的帮助，我会立即帮您翻译：</p>
+                    <div class="emergency-options">
+                        <button class="emergency-btn" data-text="我迷路了，请帮我联系我的家人">
+                            <span class="emergency-icon">🗺️</span>
+                            <span>我迷路了</span>
+                        </button>
+                        <button class="emergency-btn" data-text="我身体不适，需要看医生">
+                            <span class="emergency-icon">🏥</span>
+                            <span>身体不适</span>
+                        </button>
+                        <button class="emergency-btn" data-text="请帮我报警，我需要帮助">
+                            <span class="emergency-icon">🚔</span>
+                            <span>需要帮助</span>
+                        </button>
+                        <button class="emergency-btn" data-text="我的东西丢了，请帮我找找">
+                            <span class="emergency-icon">🎒</span>
+                            <span>物品丢失</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
