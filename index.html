@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#496f63">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="我在">
+    <meta name="description" content="智能语音助手 - 随时随地，我一直都在。专为出境旅行者打造的双向语音翻译工具。">
+    <meta name="format-detection" content="telephone=no">
+
+    <title>我在 - 智能语音助手</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 加载动画 -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loading-content">
+                <div class="loading-logo">我在</div>
+                <div class="loading-spinner">
+                    <div class="loading-ring"></div>
+                </div>
+                <p class="loading-text">正在准备...</p>
+            </div>
+        </div>
+
+        <!-- 页面1: 首页 -->
+        <section id="page-home" class="page active" role="main" aria-label="首页">
+            <header class="home-header">
+                <div class="brand">
+                    <div class="brand-badge">智能语音助手</div>
+                    <h1 class="app-name">我在</h1>
+                    <p class="tagline">随时随地，我一直都在。</p>
+                </div>
+            </header>
+
+            <main class="main-content">
+                <div class="record-area">
+                    <button id="record-btn" class="record-circle" aria-label="开始语音输入">
+                        <div class="circle-inner">
+                            <span class="mic-icon" aria-hidden="true">说</span>
+                            <span class="btn-text">点我说话</span>
+                        </div>
+                        <div class="ripple" aria-hidden="true"></div>
+                        <div class="ripple ripple-delay" aria-hidden="true"></div>
+                    </button>
+                    <div class="phrase-flow">
+                        <p class="record-tip-main">您用中文说，我替您说给对方听。</p>
+                        <p class="example-inline-title">比如</p>
+                        <div class="example-mini-grid">
+                            <button class="example-chip" type="button" data-text="洗手间在哪里" aria-label="示例：洗手间在哪里">洗手间在哪里</button>
+                            <button class="example-chip" type="button" data-text="这个多少钱" aria-label="示例：这个多少钱">这个多少钱</button>
+                            <button class="example-chip" type="button" data-text="怎么办理托运" aria-label="示例：怎么办理托运">怎么办理托运</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <footer class="bottom-bar" role="toolbar" aria-label="功能栏">
+                <button class="bottom-btn emergency" id="emergency-btn" aria-label="紧急求助">
+                    <span class="btn-icon text-icon" aria-hidden="true">SOS</span>
+                    <span class="btn-label">紧急求助</span>
+                </button>
+                <button class="bottom-btn language" id="language-btn" aria-label="选择语言">
+                    <span class="btn-icon text-icon" aria-hidden="true">语</span>
+                    <span class="btn-label" id="current-lang">当前语言：英语</span>
+                </button>
+                <button class="bottom-btn auto-play active" id="auto-play-btn" aria-label="自动语音播放已开启">
+                    <span class="btn-icon sound-icon" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </span>
+                    <span class="btn-label" id="auto-play-status">自动语音已开启</span>
+                </button>
+            </footer>
+        </section>
+
+        <!-- 页面1.5: 开始识别引导 -->
+        <section id="page-ready" class="page" role="dialog" aria-label="准备录音" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="ready-container">
+                <div class="ready-icon" aria-hidden="true">说</div>
+                <h2 class="ready-title">准备好了就开始说</h2>
+                <p class="ready-desc">请对着手机说中文，我会一边听一边显示出来。</p>
+                <button id="start-listening-btn" class="big-primary-btn">
+                    <span class="btn-icon-mic" aria-hidden="true">🎤</span>
+                    <span>开始说话</span>
+                </button>
+                <button id="cancel-ready-btn" class="quiet-btn">先不说了</button>
+            </div>
+        </section>
+
+        <!-- 微信浏览器提示 -->
+        <section id="page-browser-guide" class="page" role="alert" aria-label="浏览器提示" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="ready-container">
+                <div class="ready-icon browser-icon" aria-hidden="true">⚠️</div>
+                <h2 class="ready-title">请用系统浏览器打开</h2>
+                <p class="ready-desc">微信里可能听不到声音。点右上角"⋯"选择"在浏览器打开"，会更稳定。</p>
+                <button id="back-home-btn" class="big-primary-btn">
+                    <span>我知道了</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 页面2: 录音中 -->
+        <section id="page-listening" class="page" role="status" aria-label="正在录音" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="listening-container">
+                <div class="listening-animation" aria-hidden="true">
+                    <div class="wave-ring"></div>
+                    <div class="wave-ring wave-delay"></div>
+                    <div class="listening-pulse"></div>
+                    <div class="listening-icon">听</div>
+                </div>
+                <p class="listening-text">手机正在听您说话</p>
+                <div class="transcript-box" role="log" aria-live="polite" aria-label="语音识别结果">
+                    <p id="transcript-placeholder">您说的话会显示在这里</p>
+                    <p id="transcript-text" class="transcript-active"></p>
+                    <div class="voice-visualizer" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+                <button id="finish-speaking-btn" class="big-primary-btn finish-btn">
+                    <span>我说完了</span>
+                </button>
+                <p class="listening-hint">如果没显示出来，请靠近手机再说一遍</p>
+            </div>
+        </section>
+
+        <!-- 页面2.5: 识别失败 -->
+        <section id="page-retry" class="page" role="alert" aria-label="识别失败" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="ready-container">
+                <div class="ready-icon retry-icon" aria-hidden="true">🔄</div>
+                <h2 class="ready-title">刚才没有听清</h2>
+                <p id="retry-message" class="ready-desc">请靠近手机，再慢一点说。</p>
+                <button id="retry-record-btn" class="big-primary-btn">
+                    <span class="btn-icon-retry" aria-hidden="true">🎤</span>
+                    <span>重新说</span>
+                </button>
+                <div class="fallback-input-area">
+                    <p class="fallback-title">着急时也可以直接打字</p>
+                    <textarea
+                        id="fallback-text"
+                        class="fallback-textarea"
+                        rows="3"
+                        placeholder="例如：厕所"
+                        aria-label="手动输入文字"
+                        maxlength="100"
+                    ></textarea>
+                    <button id="fallback-translate-btn" class="secondary-wide-btn">
+                        <span>替我说这句</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 页面3: 处理中 -->
+        <section id="page-processing" class="page" role="status" aria-label="正在处理" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="processing-container">
+                <div class="processing-spinner" aria-hidden="true">
+                    <div class="spinner-circle"></div>
+                    <div class="spinner-glow"></div>
+                    <div class="spinner-center">说</div>
+                </div>
+                <p class="processing-text">正在帮您整理表达…</p>
+                <div class="processing-detail">
+                    <span id="process-step">语义整理中</span>
+                    <div class="progress-dots" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                <p id="network-hint" class="network-hint"></p>
+            </div>
+        </section>
+
+        <!-- 页面4: 结果页 -->
+        <section id="page-result" class="page" role="region" aria-label="翻译结果" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="result-container">
+                <div class="lang-badge">
+                    <span id="result-flag" aria-hidden="true">🇺🇸</span>
+                    <span id="result-lang">英语</span>
+                </div>
+
+                <div class="translation-display" role="main">
+                    <p id="translation-result"></p>
+                </div>
+                <p id="result-note" class="result-note"></p>
+
+                <div class="playing-indicator" id="playing-indicator" role="status" aria-live="polite">
+                    <span class="sound-wave" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </span>
+                    <span id="playback-status">准备好替您说给对方听</span>
+                </div>
+
+                <div class="result-actions" role="group" aria-label="操作按钮">
+                    <button class="action-btn secondary" id="show-original-btn" aria-label="查看原句">
+                        <span class="action-icon" aria-hidden="true">原</span>
+                        <span class="action-text">查看原句</span>
+                    </button>
+                    <button class="action-btn secondary" id="replay-btn" aria-label="重新播放">
+                        <span class="action-icon" aria-hidden="true">播</span>
+                        <span class="action-text">再播放一次</span>
+                    </button>
+                    <button class="action-btn primary" id="speak-again-btn" aria-label="重新录音">
+                        <span class="action-icon" aria-hidden="true">再</span>
+                        <span class="action-text">重新说</span>
+                    </button>
+                </div>
+                <button class="reverse-entry-btn" id="reverse-listen-btn" aria-label="听对方说话">
+                    <span class="reverse-icon" aria-hidden="true">听</span>
+                    <span class="reverse-text">对方说话，我帮您听</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 页面5: 听对方说话 -->
+        <section id="page-hearing" class="page" role="status" aria-label="听对方说话" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="listening-container">
+                <div class="listening-animation" aria-hidden="true">
+                    <div class="wave-ring"></div>
+                    <div class="wave-ring wave-delay"></div>
+                    <div class="listening-pulse"></div>
+                    <div class="listening-icon">听</div>
+                </div>
+                <p class="listening-text">请让对方说话</p>
+                <div class="transcript-box" role="log" aria-live="polite" aria-label="对方语音识别结果">
+                    <p id="foreign-transcript-placeholder">对方说的话会显示在这里</p>
+                    <p id="foreign-transcript-text" class="transcript-active"></p>
+                    <div class="voice-visualizer foreign" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+                <button id="finish-hearing-btn" class="big-primary-btn finish-btn">
+                    <span>我听完了</span>
+                </button>
+                <p class="listening-hint">我会帮您听懂，并用中文说出来</p>
+            </div>
+        </section>
+
+        <!-- 页面6: 对方意思 -->
+        <section id="page-hearing-result" class="page" role="region" aria-label="对方说话的意思" aria-hidden="true">
+            <button class="page-back" type="button" aria-label="返回首页">
+                <span class="back-arrow" aria-hidden="true">‹</span>
+                <span>返回</span>
+            </button>
+            <div class="result-container">
+                <div class="lang-badge">
+                    <span aria-hidden="true">🇨🇳</span>
+                    <span>中文意思</span>
+                </div>
+                <div class="translation-display" role="main">
+                    <p id="hearing-result-text"></p>
+                </div>
+                <p id="hearing-note" class="result-note"></p>
+                <div class="playing-indicator show" id="hearing-playing-indicator" role="status" aria-live="polite">
+                    <span class="sound-wave" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </span>
+                    <span id="hearing-playback-status">正在帮您读出来</span>
+                </div>
+                <div class="result-actions" role="group" aria-label="操作按钮">
+                    <button class="action-btn secondary" id="show-foreign-btn" aria-label="查看外语原句">
+                        <span class="action-icon" aria-hidden="true">原</span>
+                        <span class="action-text">查看原句</span>
+                    </button>
+                    <button class="action-btn secondary" id="replay-hearing-btn" aria-label="重新播放中文">
+                        <span class="action-icon" aria-hidden="true">播</span>
+                        <span class="action-text">再听一遍中文</span>
+                    </button>
+                    <button class="action-btn primary" id="hear-again-btn" aria-label="继续听">
+                        <span class="action-icon" aria-hidden="true">听</span>
+                        <span class="action-text">继续听对方说</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 中文原话弹窗 -->
+        <div id="original-modal" class="modal" role="dialog" aria-modal="true" aria-label="中文原话" aria-hidden="true">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>中文原话</h3>
+                    <button class="close-btn" id="close-modal" aria-label="关闭弹窗">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="original-section">
+                        <p class="section-title">您说的是：</p>
+                        <p id="original-text" class="text-content"></p>
+                    </div>
+                    <div class="optimized-section">
+                        <p class="section-title">优化为：</p>
+                        <p id="optimized-text" class="text-content"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 对方原话弹窗 -->
+        <div id="foreign-modal" class="modal" role="dialog" aria-modal="true" aria-label="对方原话" aria-hidden="true">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>对方刚才说的是</h3>
+                    <button class="close-btn" id="close-foreign-modal" aria-label="关闭弹窗">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="original-section">
+                        <p class="section-title">听到的原话：</p>
+                        <p id="foreign-original-text" class="text-content"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 语言选择弹窗 -->
+        <div id="lang-modal" class="modal" role="dialog" aria-modal="true" aria-label="选择语言" aria-hidden="true">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>选择目标语言</h3>
+                    <button class="close-btn" id="close-lang-modal" aria-label="关闭弹窗">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="lang-list" id="lang-list" role="listbox" aria-label="语言列表">
+                        <!-- 语言列表由JS生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 紧急求助弹窗 -->
+        <div id="emergency-modal" class="modal emergency-modal" role="alertdialog" aria-modal="true" aria-label="紧急求助" aria-hidden="true">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header emergency-header">
+                    <div class="emergency-title">
+                        <span class="emergency-icon-header" aria-hidden="true">🚨</span>
+                        <h3>紧急求助</h3>
+                    </div>
+                    <button class="close-btn" id="close-emergency-modal" aria-label="关闭弹窗">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p class="emergency-desc">选择您需要的帮助，我会立即替您说清楚：</p>
+                    <div class="emergency-options" role="group" aria-label="紧急选项">
+                        <button class="emergency-btn" data-text="我迷路了，请帮我联系我的家人" aria-label="我迷路了">
+                            <span class="emergency-icon" aria-hidden="true">🚶</span>
+                            <span>我迷路了</span>
+                        </button>
+                        <button class="emergency-btn" data-text="我身体不适，需要看医生" aria-label="身体不适">
+                            <span class="emergency-icon" aria-hidden="true">🏥</span>
+                            <span>身体不适</span>
+                        </button>
+                        <button class="emergency-btn" data-text="请帮我报警，我需要帮助" aria-label="需要帮助">
+                            <span class="emergency-icon" aria-hidden="true">🚔</span>
+                            <span>需要帮助</span>
+                        </button>
+                        <button class="emergency-btn" data-text="我的东西丢了，请帮我找找" aria-label="物品丢失">
+                            <span class="emergency-icon" aria-hidden="true">📱</span>
+                            <span>物品丢失</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
