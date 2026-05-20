@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#496f63">
+    <title>我在 - 智能语音代说助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --canvas: #f7f3ee;
+            --paper: #fffdf9;
+            --paper-warm: #f1ebe3;
+            --primary: #496f63;
+            --primary-light: #7fa294;
+            --primary-dark: #2f4f46;
+            --primary-soft: #e4eee8;
+            --chestnut: #6a5648;
+            --voice-start: #d8a78f;
+            --voice-end: #b87765;
+            --accent: #c7b8a5;
+            --emergency: #b95f5f;
+            --text-primary: #2c2520;
+            --text-secondary: #827266;
+            --text-tertiary: #a99c91;
+            --border: #e8dfd5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--canvas);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Typography */
+        h1, h2, h3 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(247, 243, 238, 0.95) 0%, transparent 100%);
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-logo {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            letter-spacing: 0.1em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-cta {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 40px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(216, 167, 143, 0.15) 0%, transparent 70%);
+            filter: blur(60px);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            left: 10%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(73, 111, 99, 0.1) 0%, transparent 70%);
+            filter: blur(60px);
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(30px, -30px); }
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 253, 249, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--voice-start);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hero-title {
+            font-size: clamp(48px, 8vw, 96px);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            letter-spacing: 0.08em;
+        }
+
+        .hero-subtitle {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(18px, 2.5vw, 24px);
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+
+        .hero-desc {
+            max-width: 480px;
+            font-size: 16px;
+            color: var(--text-tertiary);
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(73, 111, 99, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(73, 111, 99, 0.35);
+        }
+
+        .btn-secondary {
+            padding: 16px 32px;
+            background: rgba(255, 253, 249, 0.8);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary-light);
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 120px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 48px);
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Background Section - Single Page */
+        .background-section {
+            background: linear-gradient(180deg, var(--canvas) 0%, var(--paper-warm) 50%, var(--canvas) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .background-content {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .background-lead {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(20px, 3vw, 28px);
+            line-height: 1.8;
+            color: var(--text-primary);
+            margin-bottom: 60px;
+        }
+
+        .background-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .background-card {
+            background: rgba(255, 253, 249, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 24px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .background-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(80, 63, 48, 0.1);
+        }
+
+        .background-card-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+
+        .background-card h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .background-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Value Section */
+        .value-section {
+            background: var(--paper);
+        }
+
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 48px;
+        }
+
+        .value-card {
+            padding: 40px;
+            background: rgba(255, 253, 249, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .value-card:hover {
+            background: white;
+            box-shadow: 0 12px 32px rgba(80, 63, 48, 0.08);
+        }
+
+        .value-card h3 {
+            font-size: 20px;
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+        }
+
+        .value-card p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .value-highlight {
+            margin-top: 80px;
+            padding: 60px;
+            background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(228, 238, 232, 0.5) 100%);
+            border-radius: 24px;
+            text-align: center;
+        }
+
+        .value-highlight h3 {
+            font-size: 24px;
+            color: var(--primary-dark);
+            margin-bottom: 24px;
+        }
+
+        .value-highlight p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .sdg-tags {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .sdg-tag {
+            padding: 10px 20px;
+            background: rgba(255, 253, 249, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Features Section */
+        .features-section {
+            background: var(--canvas);
+        }
+
+        .feature-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            margin-bottom: 120px;
+        }
+
+        .feature-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .feature-row.reverse {
+            direction: rtl;
+        }
+
+        .feature-row.reverse > * {
+            direction: ltr;
+        }
+
+        .feature-content h3 {
+            font-size: 32px;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .feature-content > p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 32px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .feature-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--voice-start);
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .feature-visual {
+            position: relative;
+        }
+
+        .phone-mockup {
+            width: 280px;
+            height: 580px;
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.25);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--canvas);
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-screen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 28px;
+            background: #1a1a1a;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        /* Product Intro Section */
+        .product-section {
+            background: linear-gradient(180deg, var(--paper-warm) 0%, var(--canvas) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .product-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 100px;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 40px;
+        }
+
+        .product-text h2 {
+            font-size: 42px;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+
+        .product-text > p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        .product-features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 32px 0;
+        }
+
+        .product-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .product-feature-item span:first-child {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-soft);
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--primary-dark);
+            padding: 120px 40px;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(32px, 5vw, 48px);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            padding: 18px 40px;
+            background: white;
+            color: var(--primary-dark);
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--canvas);
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer p {
+            font-size: 14px;
+            color: var(--text-tertiary);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .nav {
+                padding: 16px 24px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 100px 24px 60px;
+            }
+
+            .section {
+                padding: 80px 24px;
+            }
+
+            .background-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .value-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-row {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+
+            .feature-row.reverse {
+                direction: ltr;
+            }
+
+            .product-content {
+                grid-template-columns: 1fr;
+                gap: 48px;
+                padding: 80px 24px;
+            }
+
+            .product-visual {
+                order: -1;
+            }
+
+            .phone-mockup {
+                width: 240px;
+                height: 500px;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-logo">我在</div>
+        <div class="nav-links">
+            <a href="#background">项目背景</a>
+            <a href="#value">项目价值</a>
+            <a href="#product">产品介绍</a>
+            <a href="#features">产品功能</a>
+        </div>
+        <a href="index.html" class="nav-cta">立即体验</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">智能语音代说助手</div>
+        <h1 class="hero-title">我在</h1>
+        <p class="hero-subtitle">随时随地，我一直都在</p>
+        <p class="hero-desc">专为中老年出境旅行者打造的温暖陪伴型沟通工具。您用中文说，我替您说给对方听。</p>
+        <div class="hero-cta">
+            <a href="index.html" class="btn-primary">立即体验</a>
+            <a href="#background" class="btn-secondary">了解更多</a>
+        </div>
+    </section>
+
+    <!-- Background Section -->
+    <section class="background-section" id="background">
+        <div class="background-content">
+            <div class="section-header">
+                <p class="section-label">Project Background</p>
+                <h2 class="section-title">项目背景</h2>
+            </div>
+            <p class="background-lead">
+                在以英文或其他外语为主的出行环境中，许多中老年人面临的并不只是"不会外语"，而是三重叠加的真实困难
+            </p>
+            <div class="background-cards">
+                <div class="background-card">
+                    <div class="background-card-icon">📱</div>
+                    <h3>不会使用复杂 App</h3>
+                    <p>传统翻译软件界面复杂、操作步骤多，对中老年人来说是难以跨越的技术门槛</p>
+                </div>
+                <div class="background-card">
+                    <div class="background-card-icon">😰</div>
+                    <h3>紧张情境难以表达</h3>
+                    <p>在异国他乡的陌生环境中，即使会说中文，也可能因紧张而表达不清需求</p>
+                </div>
+                <div class="background-card">
+                    <div class="background-card-icon">🗣️</div>
+                    <h3>口语化表达难翻译</h3>
+                    <p>零散的口语、不完整的句子，传统翻译工具难以准确理解和转换</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Value Section -->
+    <section class="value-section" id="value">
+        <div class="section">
+            <div class="section-header">
+                <p class="section-label">Project Value</p>
+                <h2 class="section-title">项目价值</h2>
+                <p class="section-subtitle">从"翻译工具"到"表达代理"的产品级重构</p>
+            </div>
+
+            <div class="value-grid">
+                <div class="value-card">
+                    <h3>零门槛表达</h3>
+                    <p>用户无需思考外语表达、无需打字、无需理解翻译逻辑，只需用中文自然说出自己的需求。系统将口语化、零散甚至混乱的中文，自动整理为清晰、礼貌、易理解的标准表达。</p>
+                </div>
+                <div class="value-card">
+                    <h3>双向沟通</h3>
+                    <p>不仅能把您的话翻译成外语，还能听懂对方的回答并用中文播报。真正实现"您用中文说，我替您说给对方听；对方说外语，我帮您听懂"。</p>
+                </div>
+                <div class="value-card">
+                    <h3>极致简化</h3>
+                    <p>砍掉所有的视觉噪音，只为极致的速度与确定感而设计。降低操作门槛、减少交互步骤、消除长辈独自面对陌生世界的心理恐惧，是我们的最高优先级。</p>
+                </div>
+                <div class="value-card">
+                    <h3>温暖陪伴</h3>
+                    <p>产品语言避免强调"翻译"，更多使用"替您说""帮您表达""帮您听懂"。让用户感受到的是"有人在帮我沟通"，而不是"我要操作一个工具"。</p>
+                </div>
+            </div>
+
+            <div class="value-highlight">
+                <h3>与联合国可持续发展目标（SDGs）高度契合</h3>
+                <p>有助于减少不平等（SDG 10），让语言与技术能力较弱的人群平等参与社会活动；支持良好健康与福祉（SDG 3），在医疗与紧急场景中保障有效沟通；促进可持续城市和社区（SDG 11），使老龄人群能够更安全、自主地进行跨地区与跨国家流动。</p>
+                <div class="sdg-tags">
+                    <span class="sdg-tag">SDG 3 良好健康与福祉</span>
+                    <span class="sdg-tag">SDG 10 减少不平等</span>
+                    <span class="sdg-tag">SDG 11 可持续城市</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Section -->
+    <section class="product-section" id="product">
+        <div class="product-content">
+            <div class="product-text">
+                <p class="section-label" style="text-align: left; margin-bottom: 16px;">Product Introduction</p>
+                <h2>您的口袋翻译官</h2>
+                <p>「我在」不是传统翻译软件，而是一个"语音代说助手"。它要解决的不是"把一句话翻译成另一种语言"这么简单，而是帮助不熟悉外语、不擅长操作手机的长辈，在国外可以更安心地开口、求助、问路、购物和办理事务。</p>
+                <p>我们深知出境旅行时的不安与焦虑，特别是面对语言障碍时的无助。因此，「我在」采用最直观的交互设计，让您无需学习即可上手，真正实现"随时随地，我一直都在"的承诺。</p>
+                <div class="product-features">
+                    <div class="product-feature-item">
+                        <span>✓</span>
+                        <span>大字号、高对比、清晰边界设计</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <span>✓</span>
+                        <span>单核心操作入口，一屏完成任务</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <span>✓</span>
+                        <span>关键状态持续反馈，消除不确定感</span>
+                    </div>
+                    <div class="product-feature-item">
+                        <span>✓</span>
+                        <span>按钮文案口语化，零学习成本</span>
+                    </div>
+                </div>
+                <a href="index.html" class="btn-primary">打开产品</a>
+            </div>
+            <div class="product-visual">
+                <div class="phone-mockup">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <img src="系统页面/产品截图1.PNG" alt="我在 App 首页">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="section">
+            <div class="section-header">
+                <p class="section-label">Features</p>
+                <h2 class="section-title">产品功能</h2>
+                <p class="section-subtitle">四大核心能力，覆盖出行全场景</p>
+            </div>
+
+            <!-- Feature 1: 语音输入 -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <h3>按住说话，即刻翻译</h3>
+                    <p>点击首页大圆按钮，直接说出您的需求。手机会实时监听您的语音，将口语化的中文自动整理为标准表达，无需您思考如何组织语言。</p>
+                    <ul class="feature-list">
+                        <li>实时语音识别，边说边显示</li>
+                        <li>自动语义补全，整理为标准表达</li>
+                        <li>无需打字，降低操作门槛</li>
+                        <li>识别失败时提供友好提示和兜底方案</li>
+                    </ul>
+                </div>
+                <div class="feature-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <img src="系统页面/产品截图3.png" alt="语音输入界面">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 2: 翻译结果展示 -->
+            <div class="feature-row reverse">
+                <div class="feature-content">
+                    <h3>大字展示，替您说给对方听</h3>
+                    <p>系统将您的话翻译成目标语言，以大字体展示在屏幕上，方便对方阅读。同时自动语音播放，让对方既能看又能听，确保沟通无障碍。</p>
+                    <ul class="feature-list">
+                        <li>超大字体展示翻译结果</li>
+                        <li>自动语音播报，音量清晰</li>
+                        <li>支持"再播放一次"重复播报</li>
+                        <li>可查看原句，对比理解</li>
+                    </ul>
+                </div>
+                <div class="feature-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <img src="系统页面/产品截图4.png" alt="翻译结果展示">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 3: 双向沟通 -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <h3>听对方说话，帮您理解</h3>
+                    <p>在结果页点击"对方说话，我帮您听"，进入反向沟通模式。系统会听对方说的外语，并整理成中文展示，同时支持中文语音播报，实现真正的双向交流。</p>
+                    <ul class="feature-list">
+                        <li>识别对方外语并翻译成中文</li>
+                        <li>中文语音播报，让您听懂回复</li>
+                        <li>支持多轮对话，持续沟通</li>
+                        <li>可查看外语原句，确认理解</li>
+                    </ul>
+                </div>
+                <div class="feature-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <img src="系统页面/产品截图5.png" alt="听对方说话">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 4: 紧急求助 -->
+            <div class="feature-row reverse">
+                <div class="feature-content">
+                    <h3>紧急求助，一键即达</h3>
+                    <p>底部功能栏的"紧急求助"按钮，预设了四种常见紧急场景：迷路、身体不适、需要帮助、物品丢失。点击即可立即发送求救信息，关键时刻为您争取宝贵时间。</p>
+                    <ul class="feature-list">
+                        <li>我迷路了 — 请帮我联系家人</li>
+                        <li>身体不适 — 需要看医生</li>
+                        <li>需要帮助 — 请帮我报警</li>
+                        <li>物品丢失 — 请帮我寻找</li>
+                    </ul>
+                </div>
+                <div class="feature-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <img src="系统页面/产品截图2.png" alt="紧急求助">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>让 AI 的能力落到"不会用 AI 的人"手中</h2>
+        <p>「我在」补上智能时代里被忽视的最后一公里</p>
+        <a href="index.html" class="cta-btn">立即体验</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Made with care for every traveler</p>
+    </footer>
+
+    <script>
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Navigation background on scroll
+        const nav = document.querySelector('.nav');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 100) {
+                nav.style.background = 'rgba(247, 243, 238, 0.98)';
+                nav.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.05)';
+            } else {
+                nav.style.background = 'linear-gradient(180deg, rgba(247, 243, 238, 0.95) 0%, transparent 100%)';
+                nav.style.boxShadow = 'none';
+            }
+
+            lastScroll = currentScroll;
+        });
+    </script>
+</body>
+</html>
